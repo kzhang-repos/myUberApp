@@ -28,7 +28,7 @@ var io = require('socket.io')(server);
 server.listen(portNumber, function() {
     console.log('server listening at port ' + portNumber);
     if (app.get('env') === 'development') var url = 'mongodb://localhost:27017/myUberApp';
-    else if (app.get('env') === 'production') var url = 'mongodb://admin:password@ds149700.mlab.com:49700/myuberclone';
+    else if (app.get('env') === 'production') var url = $PROD_MONGODB;
     mongoClient.connect(url, function(err, db) {
         console.log('Connected to database');
         
