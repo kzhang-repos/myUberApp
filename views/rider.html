@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang = "en">
+<head>
+    <meta charset="utf-8"/>
+    <title>Rider <%= userId %> </title>
+    <link href="//api.mapbox.com/mapbox.js/v2.4.0/mapbox.css" rel="stylesheet" />
+</head>
+<body data-userId="<%= userId %>">
+    <h1>Hello Rider <%= userId %></h1>
+
+    <button onclick="requestForCar()">Request for car</button>
+
+    <h4 id="notification"></h4>
+    <div id='map' style='width: 600px; height: 400px;'></div>
+    
+    <script src="/socket.io/socket.io.js"></script>
+    <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+    <script src="//api.mapbox.com/mapbox.js/v2.4.0/mapbox.js"></script>
+    <script type="text/javascript">
+        var socket = io();
+        var userId = document.body.getAttribute("data-userId");
+        var requestDetails = {};
+        var driverDetails = {};
+        var map, marker;
+
+        socket.emit('join', {userId: userId});
+
+        var requestDetails = {
+            riderId: userId,
+            location: {
+                address: "Indiranagar, Bengaluru, Karnataka 560038, India",
+                latitude: 12.9718915,
+                longitude: 77.64115449999997
+            }
+        };
+
+        function requestForCar() {
+            socket.emit('request-for-car', requestDetails);
+        }
+
+        socket.on('request-accepted', function(eventData) {
+            driverDetails = eventData;
+            document.getElementById('notification').innerHTML = 'A driver is coming to you! \n' + JSON.stringify(driverDetails);
+            //show driver location on the map
+            L.marker([
+                driverDetails.location.latitude,
+                driverDetails.location.longitude
+            ], {
+                icon: L.icon({
+                    iconUrl: '/images/driver.png',
+                    iconSize: [60, 28]
+                })
+            }).addTo(map);
+        });
+
+        L.mapbox.accessToken = "pk.eyJ1IjoibXVyZmtpdHRpbmVzcyIsImEiOiJjajExdWdmamEwNGVnMzNuejd4OGc1d214In0.zVoWa5SaW1JROA5nQDw3Ug";
+        //load map and give it default style
+        map = L.mapbox.map('map', 'mapbox.streets');
+        //set map to a given lat-lng and zoom level
+        map.setView([12.9718915, 77.64115449999997], 9);
+        //display default marker
+        marker = L.marker([12.9718915, 77.64115449999997]).addTo(map);
+        //display input box
+        map.addControl(L.mapbox.geocoderControl('mapbox.places', {
+            autocomplete: true
+        }).on('select', function(data) {
+            console.log(data);
+            requestDetails.location = {
+                address: data.feature['place_name'],
+                latitude: data.feature.center[1],
+                longitude: data.feature.center[0]
+            };
+
+            marker.setLatLng([data.feature.center[1], data.feature.center[0]]);
+        }));
+    </script>
+
+</body>
+</html>>

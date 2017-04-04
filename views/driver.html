@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang = "en">
+<head>
+    <meta charset="utf-8"/>
+    <title>Driver <%= userId %> </title>
+    <link href="//api.mapbox.com/mapbox.js/v2.4.0/mapbox.css" rel="stylesheet" />
+</head>
+<body data-userId="<%= userId %>">
+    <h1>Hello Driver <%= userId %></h1>
+    <h2>Driver details: </h2>
+    <div id='driverDetails'></div>
+
+    <h4 id='notification'>Waiting for requests...</h4>
+
+    <button onclick='acceptRide()'>Accept Ride</button>
+
+    <div id='map' style='width: 600px; height: 400px;'></div>
+    
+    <script src="/socket.io/socket.io.js"></script>
+    <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+    <script src="//api.mapbox.com/mapbox.js/v2.4.0/mapbox.js"></script>
+    <script type="text/javascript">
+        var socket = io();
+        var userId = document.body.getAttribute("data-userId");
+        //join a room once page loads
+        socket.emit('join', {userId: userId});
+        var requestDetails = {};
+        var driverDetails = {};
+        var map, marker;
+
+        //get driver info once page loads
+        $.ajax({
+            url: '/drivers/info?userId=' + userId,
+            type: 'GET',
+            dataType: 'json',
+            success: function(data) {
+                driverDetails = data.driverDetails;
+                driverDetails.location = {
+                    address: driverDetails.location.address,
+                    longitude: driverDetails.location.coordinates[0],
+                    latitude: driverDetails.location.coordinates[1]
+                };
+                document.getElementById('driverDetails').innerHTML = JSON.stringify(data.driverDetails);
+                
+                L.mapbox.accessToken = "pk.eyJ1IjoibXVyZmtpdHRpbmVzcyIsImEiOiJjajExdWdmamEwNGVnMzNuejd4OGc1d214In0.zVoWa5SaW1JROA5nQDw3Ug";
+                map = L.mapbox.map('map', 'mapbox.streets');
+
+                //default map
+                map.setView([driverDetails.location.latitude, driverDetails.location.longitude], 9);
+                //default marker
+                marker = L.marker([driverDetails.location.latitude, driverDetails.location.longitude]).addTo(map);
+                //choose new marker
+                // map.addControl(L.mapbox.geocoderControl('mapbox.places', {
+                //     autocomplete: true
+                // }).on('select', function(data) {
+                //     console.log(data);
+                //     marker.setLatLng([
+                //         data.feature.center[1],
+                //         data.feature.center[0]
+                //     ]);
+                // }));
+            },
+            error: function(httpRequest, status, error) {
+                console.log(error);
+            }
+        });
+
+        socket.on('request-for-car', function(eventData) {
+            requestDetails = eventData;
+            document.getElementById('notification').innerHTML = 'Someone is requesting a car! \n' + JSON.stringify(requestDetails);
+            L.marker([
+                requestDetails.location.latitude,
+                requestDetails.location.longitude
+            ], {
+                icon: L.icon({
+                    iconUrl: '/images/rider.png',
+                    iconSize: [50, 50]
+                })
+            }).addTo(map);
+        });
+
+        function acceptRide() {
+            socket.emit('request-accepted', {
+                requestDetails: requestDetails,
+                driverDetails: driverDetails
+            });
+        }
+    </script>
+</body>
+</html>>
