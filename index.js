@@ -28,22 +28,25 @@ var io = require('socket.io')(server);
 server.listen(portNumber, function() {
     console.log('server listening at port ' + portNumber);
     if (app.get('env') === 'development') var url = 'mongodb://localhost:27017/myUberApp';
-    else if (app.get('env') === 'production') var url = 'mongodb://admin:password@ds149700.mlab.com:49700/myuberclone';
+    else if (app.get('env') === 'production') var url = 'PROD_MONGODB';
     mongoClient.connect(url, function(err, db) {
         console.log('Connected to database');
         
+        //https://myuberclone.herokuapp.com/rider.html?userId=Kate
         app.get('/rider.html', function(req, res) {
             res.render('rider.html', {
                 userId: req.query.userId
             });
         });
 
+        //https://myuberclone.herokuapp.com/driver.html?userId=02
         app.get('/driver.html', function(req, res) {
             res.render('driver.html', {
                 userId: req.query.userId
             });
         });
 
+        //https://myuberclone.herokuapp.com/data.html
         app.get('/data.html', function(req, res) {
             res.render('data.html');
         });
