@@ -21,7 +21,7 @@ app.set('view engine', 'html');
 app.engine('html', consolidate.underscore);
 
 var server = http.Server(app);
-var portNumber = 8000;
+var portNumber = process.env.PORT || 8000;
 
 var io = require('socket.io')(server);
 
