@@ -3,9 +3,11 @@ var express = require('express');
 var consolidate = require('consolidate');
 var _ = require('underscore');
 var bodyParser = require('body-parser');
+var Config = require('./config/index.js');
 
 var routes = require('./routes');
 var mongoClient = require('mongodb').MongoClient;
+var config = new Config();
 
 var app = express();
 app.use(bodyParser.urlencoded({
@@ -27,8 +29,7 @@ var io = require('socket.io')(server);
 
 server.listen(portNumber, function() {
     console.log('server listening at port ' + portNumber);
-    if (app.get('env') === 'development') var url = 'mongodb://localhost:27017/myUberApp';
-    else if (app.get('env') === 'production') var url = 'PROD_MONGODB';
+    var url = config.get('db.url');
     mongoClient.connect(url, function(err, db) {
         console.log('Connected to database');
         

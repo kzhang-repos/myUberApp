@@ -1,0 +1,5 @@
+{
+    "db": {
+        "url": "mongodb://admin:password@ds149700.mlab.com:49700/myuberclone"
+    }
+}
